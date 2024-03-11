@@ -16,22 +16,24 @@ import (
 
 var ErrNoDialer = errors.New("no dialer available")
 
-func unprotectedDial(network, address string) (net.Conn, error) {
-	return net.Dial(network, address)
+type Dialer struct {
+	protectedDial   func(network, address string) (net.Conn, error)
+	unprotectedDial func(network, address string) (net.Conn, error)
 }
 
-var protectedDial = func(network, address string) (net.Conn, error) {
-	return nil, ErrNoDialer
-}
-
-type Protector interface {
-	Protect(fd int) bool
+func NewDialer() *Dialer {
+	return &Dialer{
+		protectedDial: func(network, address string) (net.Conn, error) {
+			return nil, ErrNoDialer
+		},
+		unprotectedDial: net.Dial,
+	}
 }
 
 // SetProtector updates the protectedDial function to use the provided Protector
 // to protect the file descriptor of the connection.
-func SetProtector(p Protector) {
-	protectedDial = func(network, address string) (net.Conn, error) {
+func (d *Dialer) SetProtector(p Protector) {
+	d.protectedDial = func(network, address string) (net.Conn, error) {
 		dialer := &net.Dialer{
 			Timeout:   time.Second * 16,
 			LocalAddr: nil,
@@ -50,15 +52,36 @@ func SetProtector(p Protector) {
 	}
 }
 
-func ProtectedDialWATER(remoteAddr string, wasm []byte) (net.Conn, error) {
-	return dialWATER(remoteAddr, wasm, protectedDial)
+func (d *Dialer) DialWATERProtected(network, remoteAddr string, wasm []byte) (NetConn, error) {
+	return d.dialWATER(network, remoteAddr, wasm, d.protectedDial)
 }
 
-func UnprotectedDialWATER(remoteAddr string, wasm []byte) (net.Conn, error) {
-	return dialWATER(remoteAddr, wasm, unprotectedDial)
+func (d *Dialer) DialWATERUnprotected(network, remoteAddr string, wasm []byte) (NetConn, error) {
+	return d.dialWATER(network, remoteAddr, wasm, d.unprotectedDial)
 }
 
-func dialWATER(remoteAddr string, wasm []byte, dialerFunc func(network string, address string) (net.Conn, error)) (net.Conn, error) {
+func (d *Dialer) DirectlyStartWorkerProtected(network, remoteAddr string, wasm []byte) error {
+	conn, err := d.DialWATERProtected(network, remoteAddr, wasm)
+	if err != nil {
+		panic(fmt.Sprintf("failed to dial: %v", err))
+	}
+
+	return startWorker(conn)
+}
+
+func (d *Dialer) DirectlyStartWorkerUnprotected(network, remoteAddr string, wasm []byte) error {
+	conn, err := d.DialWATERUnprotected(network, remoteAddr, wasm)
+	if err != nil {
+		panic(fmt.Sprintf("failed to dial: %v", err))
+	}
+
+	return startWorker(conn)
+}
+
+func (d *Dialer) dialWATER(network, remoteAddr string,
+	wasm []byte,
+	dialerFunc func(network, address string) (net.Conn, error),
+) (NetConn, error) {
 	config := &water.Config{
 		TransportModuleBin: wasm,
 		NetworkDialerFunc:  dialerFunc,
@@ -69,16 +92,13 @@ func dialWATER(remoteAddr string, wasm []byte, dialerFunc func(network string, a
 	config.ModuleConfig().InheritStderr()
 
 	ctx := context.Background()
-	// // optional: enable wazero logging
-	// ctx = context.WithValue(ctx, experimental.FunctionListenerFactoryKey{},
-	// 	logging.NewHostLoggingListenerFactory(os.Stderr, logging.LogScopeFilesystem|logging.LogScopePoll|logging.LogScopeSock))
 
 	dialer, err := water.NewDialerWithContext(ctx, config)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create dialer: %v", err))
 	}
 
-	conn, err := dialer.DialContext(ctx, "tcp", remoteAddr)
+	conn, err := dialer.DialContext(ctx, network, remoteAddr)
 	if err != nil {
 		panic(fmt.Sprintf("failed to dial: %v", err))
 	}
@@ -87,10 +107,10 @@ func dialWATER(remoteAddr string, wasm []byte, dialerFunc func(network string, a
 	// So effectively, W.A.T.E.R. API ends here and everything below
 	// this line is just how you treat a net.Conn.
 
-	return conn, nil
+	return &netConn{conn}, nil
 }
 
-func StartWorker(conn net.Conn) {
+func startWorker(conn NetConn) error {
 	defer conn.Close()
 
 	log.Printf("Connected to %s", conn.RemoteAddr())
@@ -119,14 +139,14 @@ func StartWorker(conn net.Conn) {
 		select {
 		case msg := <-chanMsgRecv:
 			if msg == nil {
-				return // connection closed
+				return errors.New("connection closed")
 			}
 			log.Printf("peer: %x\n", msg)
 		case <-ticker.C:
 			n, err := rand.Read(sendBuf)
 			if err != nil {
 				log.Printf("rand.Read: error %v, tearing down connection...", err)
-				return
+				return err
 			}
 			// print the bytes sending as hex string
 			log.Printf("sending: %x\n", sendBuf[:n])
@@ -134,7 +154,7 @@ func StartWorker(conn net.Conn) {
 			_, err = conn.Write(sendBuf[:n])
 			if err != nil {
 				log.Printf("write: error %v, tearing down connection...", err)
-				return
+				return err
 			}
 		}
 	}
