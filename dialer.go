@@ -19,6 +19,9 @@ var ErrNoDialer = errors.New("no dialer available")
 type Dialer struct {
 	protectedDial   func(network, address string) (net.Conn, error)
 	unprotectedDial func(network, address string) (net.Conn, error)
+
+	configJSON []byte
+	configPB   []byte
 }
 
 func NewDialer() *Dialer {
@@ -50,6 +53,16 @@ func (d *Dialer) SetProtector(p Protector) {
 
 		return dialer.Dial(network, address)
 	}
+}
+
+func (d *Dialer) SetConfigJSON(configJSON []byte) {
+	d.configJSON = configJSON
+	d.configPB = nil
+}
+
+func (d *Dialer) SetConfigPB(configPB []byte) {
+	d.configPB = configPB
+	d.configJSON = nil
 }
 
 func (d *Dialer) DialWATERProtected(network, remoteAddr string, wasm []byte) (NetConn, error) {
@@ -86,10 +99,12 @@ func (d *Dialer) dialWATER(network, remoteAddr string,
 		TransportModuleBin: wasm,
 		NetworkDialerFunc:  dialerFunc,
 	}
-	// configuring the standard out of the WebAssembly instance to inherit
-	// from the parent process
-	config.ModuleConfig().InheritStdout()
-	config.ModuleConfig().InheritStderr()
+
+	if d.configJSON != nil {
+		config.UnmarshalJSON(d.configJSON)
+	} else if d.configPB != nil {
+		config.UnmarshalProto(d.configPB)
+	}
 
 	ctx := context.Background()
 
