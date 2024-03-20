@@ -1,9 +1,9 @@
 github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
 github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
-github.com/refraction-networking/water v0.6.3 h1:s1phOBKiChhD+zpxmkxOKlNz3E/42Pcu8zu4tTs6vDE=
-github.com/refraction-networking/water v0.6.3/go.mod h1:7c3xEC5gRhkMwM4Fh5dKP2jr1dUMsL9nmzzAGRJclB4=
-github.com/refraction-networking/wazero v1.6.6-w h1:GopGAQ5/Rah0vzGImewwOrOaXFR+FmgWlgGKs1JpVlw=
-github.com/refraction-networking/wazero v1.6.6-w/go.mod h1:ytl6Zuh20R/eROuyDaGPkp82O9C/DJfXAwJfQ3X6/7Y=
+github.com/refraction-networking/water v0.6.4 h1:7E0nFdSyVXMZ5bz7GPHz1ALBQDUiyHbiBfPZ4eSBmIM=
+github.com/refraction-networking/water v0.6.4/go.mod h1:UDjvBH4nYp0UkrJm9GJ1G96cpELH31/BIjoTiWkYoME=
+github.com/refraction-networking/wazero v1.7.0-w h1:fFQO1VL+fhpFWIgfZN9FPnWYhf5DTyzwzJijqg/LUm4=
+github.com/refraction-networking/wazero v1.7.0-w/go.mod h1:ytl6Zuh20R/eROuyDaGPkp82O9C/DJfXAwJfQ3X6/7Y=
 golang.org/x/exp v0.0.0-20240119083558-1b970713d09a h1:Q8/wZp0KX97QFTc2ywcOE0YRjZPVIx+MXInMzdvQqcA=
 golang.org/x/exp v0.0.0-20240119083558-1b970713d09a/go.mod h1:idGWGoKP1toJGkd5/ig9ZLuPcZBC3ewk7SzmH0uou08=
 golang.org/x/mobile v0.0.0-20240213143359-d1f7d3436075 h1:iZzqyDd8gFkJZpsJNzveyScRBcQlsveheh6Q77LzhPY=

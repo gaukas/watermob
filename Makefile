@@ -5,7 +5,7 @@ IOS_ARTIFACT=$(BUILDDIR)/WaterMob.framework
 ANDROID_ARTIFACT=$(BUILDDIR)/watermob.aar
 IOS_TARGET=ios
 ANDROID_TARGET=android
-ANDROID_API=23
+ANDROID_API=28
 # LDFLAGS='-s -w -X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn'
 LDFLAGS='-s -w'
 IMPORT_PATH=github.com/gaukas/watermob
