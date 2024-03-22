@@ -100,6 +100,10 @@ func (d *Dialer) dialWATER(network, remoteAddr string,
 		NetworkDialerFunc:  dialerFunc,
 	}
 
+	if len(config.TransportModuleBin) == 0 {
+		return nil, errors.New("water: WebAssembly Transport Module binary is not provided in config")
+	}
+
 	if d.configJSON != nil {
 		config.UnmarshalJSON(d.configJSON)
 	} else if d.configPB != nil {
