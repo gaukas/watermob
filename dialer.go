@@ -12,9 +12,12 @@ import (
 
 	"github.com/refraction-networking/water"
 	_ "github.com/refraction-networking/water/transport/v0"
+	"github.com/tetratelabs/wazero"
 )
 
 var ErrNoDialer = errors.New("no dialer available")
+
+var compilationCache = wazero.NewCompilationCache()
 
 type Dialer struct {
 	protectedDial   func(network, address string) (net.Conn, error)
@@ -25,6 +28,8 @@ type Dialer struct {
 }
 
 func NewDialer() *Dialer {
+	water.SetGlobalCompilationCache(compilationCache)
+
 	return &Dialer{
 		protectedDial: func(network, address string) (net.Conn, error) {
 			return nil, ErrNoDialer
@@ -121,7 +126,6 @@ func (d *Dialer) dialWATER(network, remoteAddr string,
 	if err != nil {
 		panic(fmt.Sprintf("failed to dial: %v", err))
 	}
-	defer conn.Close()
 	// conn is a net.Conn that you are familiar with.
 	// So effectively, W.A.T.E.R. API ends here and everything below
 	// this line is just how you treat a net.Conn.
