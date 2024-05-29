@@ -3,6 +3,7 @@ package watermob
 import (
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -14,6 +15,12 @@ import (
 	_ "github.com/refraction-networking/water/transport/v0"
 	"github.com/tetratelabs/wazero"
 )
+
+type ConfigJSONiOS struct {
+	Runtime struct {
+		ForceInterpreter bool `json:"force_interpreter,omitempty"`
+	} `json:"runtime,omitempty"`
+}
 
 var ErrNoDialer = errors.New("no dialer available")
 
@@ -27,15 +34,36 @@ type Dialer struct {
 	configPB   []byte
 }
 
-func NewDialer() *Dialer {
+func NewDialer(is_ios bool) *Dialer {
 	water.SetGlobalCompilationCache(compilationCache)
 
-	return &Dialer{
+	var dialer = Dialer{
 		protectedDial: func(network, address string) (net.Conn, error) {
 			return nil, ErrNoDialer
 		},
 		unprotectedDial: net.Dial,
 	}
+
+	if is_ios {
+		// Create a ConfigJSON object with only ForceInterpreter set
+		config := ConfigJSONiOS{
+			Runtime: struct {
+				ForceInterpreter bool `json:"force_interpreter,omitempty"`
+			}{
+				ForceInterpreter: true, // Setting this to true or false as needed
+			},
+		}
+
+		// Marshal the config object to JSON
+		jsonData, err := json.Marshal(config)
+		if err != nil {
+			panic(fmt.Sprintf("Error marshaling JSON:", err))
+		}
+
+		dialer.configJSON = jsonData
+	}
+
+	return &dialer
 }
 
 // SetProtector updates the protectedDial function to use the provided Protector
