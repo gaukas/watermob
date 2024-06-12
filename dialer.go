@@ -3,11 +3,11 @@ package watermob
 import (
 	"context"
 	"crypto/rand"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -34,7 +34,7 @@ type Dialer struct {
 	configPB   []byte
 }
 
-func NewDialer(is_ios bool) *Dialer {
+func NewDialer() *Dialer {
 	water.SetGlobalCompilationCache(compilationCache)
 
 	var dialer = Dialer{
@@ -42,25 +42,6 @@ func NewDialer(is_ios bool) *Dialer {
 			return nil, ErrNoDialer
 		},
 		unprotectedDial: net.Dial,
-	}
-
-	if is_ios {
-		// Create a ConfigJSON object with only ForceInterpreter set
-		config := ConfigJSONiOS{
-			Runtime: struct {
-				ForceInterpreter bool `json:"force_interpreter,omitempty"`
-			}{
-				ForceInterpreter: true, // Setting this to true or false as needed
-			},
-		}
-
-		// Marshal the config object to JSON
-		jsonData, err := json.Marshal(config)
-		if err != nil {
-			panic(fmt.Sprintf("Error marshaling JSON:", err))
-		}
-
-		dialer.configJSON = jsonData
 	}
 
 	return &dialer
@@ -141,6 +122,11 @@ func (d *Dialer) dialWATER(network, remoteAddr string,
 		config.UnmarshalJSON(d.configJSON)
 	} else if d.configPB != nil {
 		config.UnmarshalProto(d.configPB)
+	}
+
+	if runtime.GOOS == "ios" {
+		// Force-enable interpreter mode on iOS until we have a better workaround.
+		config.RuntimeConfig().Interpreter()
 	}
 
 	ctx := context.Background()
