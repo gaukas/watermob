@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -14,6 +15,12 @@ import (
 	_ "github.com/refraction-networking/water/transport/v0"
 	"github.com/tetratelabs/wazero"
 )
+
+type ConfigJSONiOS struct {
+	Runtime struct {
+		ForceInterpreter bool `json:"force_interpreter,omitempty"`
+	} `json:"runtime,omitempty"`
+}
 
 var ErrNoDialer = errors.New("no dialer available")
 
@@ -113,6 +120,11 @@ func (d *Dialer) dialWATER(network, remoteAddr string,
 		config.UnmarshalJSON(d.configJSON)
 	} else if d.configPB != nil {
 		config.UnmarshalProto(d.configPB)
+	}
+
+	if runtime.GOOS == "ios" {
+		// Force-enable interpreter mode on iOS until we have a better workaround.
+		config.RuntimeConfig().Interpreter()
 	}
 
 	ctx := context.Background()
