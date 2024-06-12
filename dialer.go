@@ -37,14 +37,12 @@ type Dialer struct {
 func NewDialer() *Dialer {
 	water.SetGlobalCompilationCache(compilationCache)
 
-	var dialer = Dialer{
+	return &Dialer{
 		protectedDial: func(network, address string) (net.Conn, error) {
 			return nil, ErrNoDialer
 		},
 		unprotectedDial: net.Dial,
 	}
-
-	return &dialer
 }
 
 // SetProtector updates the protectedDial function to use the provided Protector
