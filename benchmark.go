@@ -36,7 +36,7 @@ func (d *BenchmarkDialer) SetInterval(interval time.Duration) *BenchmarkDialer {
 	return d
 }
 
-func (d *BenchmarkDialer) BenchmarkWATERWrite(network, remoteAddr string, wasm []byte) error {
+func (d *BenchmarkDialer) PressureBenchmarkWATER(network, remoteAddr string, wasm []byte, write bool) error {
 	conn, err := d.DialWATER(network, remoteAddr, wasm)
 	if err != nil {
 		return err
@@ -48,35 +48,21 @@ func (d *BenchmarkDialer) BenchmarkWATERWrite(network, remoteAddr string, wasm [
 		TotalMessages: uint64(d.totalMessage),
 	}
 
-	if err := benchmark.Writer(conn.(*netConn).embeddedConn); err != nil {
-		return err
+	if write {
+		if err := benchmark.Writer(conn.(*netConn).embeddedConn); err != nil {
+			return err
+		}
+	} else {
+		if err := benchmark.Reader(conn.(*netConn).embeddedConn); err != nil {
+			return err
+		}
 	}
 
-	log.Printf("BenchmarkWATERWrite Result: %v", benchmark.Result())
+	log.Printf("PressureBenchmarkWATER Result: %v", benchmark.Result())
 	return nil
 }
 
-func (d *BenchmarkDialer) BenchmarkWATERRead(network, remoteAddr string, wasm []byte) error {
-	conn, err := d.DialWATER(network, remoteAddr, wasm)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	benchmark := &benchmarkconn.PressuredBenchmark{
-		MessageSize:   d.messageSize,
-		TotalMessages: uint64(d.totalMessage),
-	}
-
-	if err := benchmark.Reader(conn.(*netConn).embeddedConn); err != nil {
-		return err
-	}
-
-	log.Printf("BenchmarkWATERRead Result: %v", benchmark.Result())
-	return nil
-}
-
-func (d *BenchmarkDialer) BenchmarkWATEREcho(network, remoteAddr string, wasm []byte) error {
+func (d *BenchmarkDialer) EchoBenchmarkWATER(network, remoteAddr string, wasm []byte, write bool) error {
 	conn, err := d.DialWATER(network, remoteAddr, wasm)
 	if err != nil {
 		return err
@@ -90,10 +76,16 @@ func (d *BenchmarkDialer) BenchmarkWATEREcho(network, remoteAddr string, wasm []
 		Echo:          true,
 	}
 
-	if err := benchmark.Writer(conn.(*netConn).embeddedConn); err != nil {
-		return err
+	if write {
+		if err := benchmark.Writer(conn.(*netConn).embeddedConn); err != nil {
+			return err
+		}
+	} else {
+		if err := benchmark.Reader(conn.(*netConn).embeddedConn); err != nil {
+			return err
+		}
 	}
 
-	log.Printf("BenchmarkWATEREcho Result: %v", benchmark.Result())
+	log.Printf("EchoBenchmarkWATER Result: %v", benchmark.Result())
 	return nil
 }
