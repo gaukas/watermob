@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	. "github.com/gaukas/watermob"
+	"github.com/gaukas/watermob"
 )
 
 const (
@@ -68,7 +68,7 @@ func main() {
 		exitWithUsage()
 	}
 
-	bd := NewBenchmarkDialer().SetMessageSize(messageSize).SetTotalMessage(totalMessage).SetInterval(interval)
+	bd := watermob.NewBenchmarkDialer().SetMessageSize(messageSize).SetTotalMessage(totalMessage).SetInterval(interval)
 
 	var writeBench bool
 	benchCommand := flag.Arg(1)
