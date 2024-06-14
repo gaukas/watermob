@@ -32,12 +32,12 @@ func init() {
 	flag.StringVar(&wasmPath, "webassembly-path", "", "path to the wasm file")
 	flag.StringVar(&wasmPath, "wasm", "", "path to the wasm file (shorthand)")
 
-	flag.IntVar(&messageSize, "message-size", 1024, "size of the message to send")
-	flag.IntVar(&messageSize, "sz", 1024, "size of the message to send (shorthand)")
-	flag.IntVar(&totalMessage, "total-message", 1000, "total number of messages to send")
-	flag.IntVar(&totalMessage, "m", 1000, "total number of messages to send (shorthand)")
-	flag.DurationVar(&interval, "interval", 1*time.Millisecond, "minimal interval between each message, ignored for commands other than echo")
-	flag.DurationVar(&interval, "i", 1*time.Millisecond, "minimal interval between each message, ignored for commands other than echo (shorthand)")
+	flag.IntVar(&messageSize, "message-size", 1024, "size of the message to send/expect")
+	flag.IntVar(&messageSize, "sz", 1024, "size of the message to send/expect (shorthand)")
+	flag.IntVar(&totalMessage, "total-message", 1000, "total number of messages to send/expect")
+	flag.IntVar(&totalMessage, "m", 1000, "total number of messages to send/expect (shorthand)")
+	flag.DurationVar(&interval, "interval", 1*time.Millisecond, "minimal interval between each message, ignored for types other than echo")
+	flag.DurationVar(&interval, "i", 1*time.Millisecond, "minimal interval between each message, ignored for types other than echo (shorthand)")
 }
 
 func exitWithUsage() {
