@@ -54,12 +54,16 @@ func (d *Dialer) SetProtector(p Protector) {
 			LocalAddr: nil,
 			KeepAlive: 0,
 			Control: func(network, address string, c syscall.RawConn) error {
-				return c.Control(func(fd uintptr) {
+				var innerErr error
+				if err := c.Control(func(fd uintptr) {
 					ok := p.Protect(int(fd))
 					if !ok {
-						panic("failed to protect fd")
+						innerErr = errors.New("failed to protect fd")
 					}
-				})
+				}); err != nil {
+					return err
+				}
+				return innerErr
 			},
 		}
 
@@ -102,12 +106,12 @@ func (d *Dialer) DialWATER(network, remoteAddr string, wasm []byte) (NetConn, er
 
 	dialer, err := water.NewDialerWithContext(ctx, config)
 	if err != nil {
-		panic(fmt.Sprintf("failed to create dialer: %v", err))
+		return nil, fmt.Errorf("failed to create dialer: %w", err)
 	}
 
 	conn, err := dialer.DialContext(ctx, network, remoteAddr)
 	if err != nil {
-		panic(fmt.Sprintf("failed to dial: %v", err))
+		return nil, fmt.Errorf("failed to dial: %w", err)
 	}
 	// conn is a net.Conn that you are familiar with.
 	// So effectively, W.A.T.E.R. API ends here and everything below
