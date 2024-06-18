@@ -11,14 +11,9 @@ import (
 
 	"github.com/refraction-networking/water"
 	_ "github.com/refraction-networking/water/transport/v0"
+	_ "github.com/refraction-networking/water/transport/v1"
 	"github.com/tetratelabs/wazero"
 )
-
-type ConfigJSONiOS struct {
-	Runtime struct {
-		ForceInterpreter bool `json:"force_interpreter,omitempty"`
-	} `json:"runtime,omitempty"`
-}
 
 var ErrNoDialer = errors.New("no dialer available")
 
@@ -31,6 +26,8 @@ type Dialer struct {
 
 	configJSON []byte
 	configPB   []byte
+
+	forceInterpreter bool
 }
 
 func NewDialer() *Dialer {
@@ -97,7 +94,7 @@ func (d *Dialer) DialWATER(network, remoteAddr string, wasm []byte) (NetConn, er
 		config.UnmarshalProto(d.configPB)
 	}
 
-	if runtime.GOOS == "ios" {
+	if runtime.GOOS == "ios" || d.forceInterpreter {
 		// Force-enable interpreter mode on iOS until we have a better workaround.
 		config.RuntimeConfig().Interpreter()
 	}
@@ -113,9 +110,18 @@ func (d *Dialer) DialWATER(network, remoteAddr string, wasm []byte) (NetConn, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial: %w", err)
 	}
+
 	// conn is a net.Conn that you are familiar with.
 	// So effectively, W.A.T.E.R. API ends here and everything below
 	// this line is just how you treat a net.Conn.
 
 	return &netConn{conn}, nil
+}
+
+func (d *Dialer) ForceInterpreter() {
+	d.forceInterpreter = true
+}
+
+func (d *Dialer) DoNotForceInterpreter() {
+	d.forceInterpreter = false
 }
