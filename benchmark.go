@@ -52,6 +52,7 @@ func (d *BenchmarkDialer) PressureBenchmarkWATER(network, remoteAddr string, was
 		if err := benchmark.Writer(conn.(*netConn).embeddedConn); err != nil {
 			return err
 		}
+		time.Sleep(10 * time.Second)
 	} else {
 		if err := benchmark.Reader(conn.(*netConn).embeddedConn); err != nil {
 			return err
@@ -80,6 +81,7 @@ func (d *BenchmarkDialer) EchoBenchmarkWATER(network, remoteAddr string, wasm []
 		if err := benchmark.Writer(conn.(*netConn).embeddedConn); err != nil {
 			return err
 		}
+		time.Sleep(10 * time.Second)
 	} else {
 		if err := benchmark.Reader(conn.(*netConn).embeddedConn); err != nil {
 			return err
