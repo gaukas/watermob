@@ -89,9 +89,13 @@ func (d *Dialer) DialWATER(network, remoteAddr string, wasm []byte) (NetConn, er
 	}
 
 	if d.configJSON != nil {
-		config.UnmarshalJSON(d.configJSON)
+		if err := config.UnmarshalJSON(d.configJSON); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
 	} else if d.configPB != nil {
-		config.UnmarshalProto(d.configPB)
+		if err := config.UnmarshalProto(d.configPB); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
 	}
 
 	if runtime.GOOS == "ios" || d.forceInterpreter {

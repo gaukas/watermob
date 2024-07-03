@@ -1,0 +1,9 @@
+{
+    "tls_config": {
+        "server_name": "gaukas.wang",
+        "root_ca_path": "/etc/ssl/certs/ca-certificates.crt",
+        "insecure_skip_verify": true
+    },
+    "internal_buffer_size": 1024,
+    "background_worker_fairness": true
+}
