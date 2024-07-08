@@ -1,0 +1,101 @@
+name: "Build Artifact (Beta)"
+
+# TODO: restrict this to build only on tag or on push to master. 
+
+on:
+  push:
+    # branches:
+    #   - master
+
+jobs:
+  build-android:
+    name: Build Android artifact with go${{ matrix.go }}
+    strategy:
+      matrix:
+        # go: [ "1.21.x", "1.22.x" ] # we support the latest 2 stable versions of Go
+        go: [ "1.22.x" ] # we support only the latest stable versions of Go
+    runs-on: "ubuntu-latest"
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go ${{ matrix.go }}
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go }}
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    - name: Setup Android NDK
+      uses: nttld/setup-ndk@v1
+      id: setup-ndk
+      with:
+        ndk-version: r26d
+        add-to-path: true
+        link-to-sdk: true
+    - name: Install additional Android platforms # TODO: bump to a more recent Android API version?
+      run: |
+        sdkmanager --list_installed
+        sdkmanager "platforms;android-27"
+        sdkmanager --list_installed
+    - name: Install gomobile
+      run: |
+        go install golang.org/x/mobile/cmd/gomobile@latest
+        gomobile init
+    - name: Build Android
+      run: |
+        make android
+        ls ./build
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: watermob.aar
+        path: ./build/watermob.aar
+        retention-days: 1
+
+  build-ios:
+    name: Build iOS artifact with go${{ matrix.go }}
+    strategy:
+      matrix:
+        # go: [ "1.21.x", "1.22.x" ] # we support the latest 2 stable versions of Go
+        go: [ "1.22.x" ] # we support only the latest stable versions of Go
+    runs-on: "macos-latest"
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go ${{ matrix.go }}
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go }}
+    - name: Install gomobile
+      run: |
+        go install golang.org/x/mobile/cmd/gomobile@latest
+        gomobile init
+    - name: Build iOS
+      run: |
+        echo "TODO: implement me!"
+
+  release:
+    needs: 
+        - build-android
+        - build-ios
+    # if: startsWith(github.event.ref, 'refs/tags/v')
+    name: "Release Artifact for ${{ github.ref_name }}"
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-${{ github.ref_name }} # all artifacts
+      - name: List Artifacts
+        run: ls -R release-${{ github.ref_name }}
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        with:
+          name: ${{ github.ref_name }}
+          files: |
+            release-${{ github.ref_name }}/**/*.aar
+            release-${{ github.ref_name }}/**/*.xcframework.tar.gz
+          prerelease: true
