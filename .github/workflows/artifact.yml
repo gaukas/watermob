@@ -74,7 +74,13 @@ jobs:
         gomobile init
     - name: Build iOS
       run: |
-        echo "TODO: implement me!"
+        make ios
+    - name: Upload iOS Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Watermob.xcframework
+        path: ./build/Watermob.xcframework
+        retention-days: 1
 
   release:
     needs: 
@@ -97,5 +103,5 @@ jobs:
           name: ${{ github.ref_name }}
           files: |
             release-${{ github.ref_name }}/**/*.aar
-            release-${{ github.ref_name }}/**/*.xcframework.tar.gz
+            release-${{ github.ref_name }}/**/*.xcframework
           prerelease: true
