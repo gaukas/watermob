@@ -75,11 +75,13 @@ jobs:
     - name: Build iOS
       run: |
         make ios
+    - name: Archive iOS XCFramework
+      run: tar -czvf ./build/Watermob.xcframework.tar.gz ./build/Watermob.xcframework
     - name: Upload iOS Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Watermob.xcframework
-        path: ./build/Watermob.xcframework
+        name: Watermob.xcframework.tar.gz
+        path: ./build/Watermob.xcframework.tar.gz
         retention-days: 1
 
   release:
@@ -103,5 +105,5 @@ jobs:
           name: ${{ github.ref_name }}
           files: |
             release-${{ github.ref_name }}/**/*.aar
-            release-${{ github.ref_name }}/**/*.xcframework
+            release-${{ github.ref_name }}/**/*.xcframework.tar.gz
           prerelease: true
