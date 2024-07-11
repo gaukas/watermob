@@ -1,18 +1,19 @@
-name: "Build Artifact (Beta)"
-
-# TODO: restrict this to build only on tag or on push to master. 
+name: "Build Artifact"
 
 on:
+  pull_request:
+    branches:
+      - master
+      - main
   push:
-    # branches:
-    #   - master
+    tags:
+      - 'v*'
 
 jobs:
   build-android:
     name: Build Android artifact with go${{ matrix.go }}
     strategy:
       matrix:
-        # go: [ "1.21.x", "1.22.x" ] # we support the latest 2 stable versions of Go
         go: [ "1.22.x" ] # we support only the latest stable versions of Go
     runs-on: "ubuntu-latest"
     steps:
@@ -59,7 +60,6 @@ jobs:
     name: Build iOS artifact with go${{ matrix.go }}
     strategy:
       matrix:
-        # go: [ "1.21.x", "1.22.x" ] # we support the latest 2 stable versions of Go
         go: [ "1.22.x" ] # we support only the latest stable versions of Go
     runs-on: "macos-latest"
     steps:
@@ -88,7 +88,7 @@ jobs:
     needs: 
         - build-android
         - build-ios
-    # if: startsWith(github.event.ref, 'refs/tags/v')
+    if: startsWith(github.event.ref, 'refs/tags/v')
     name: "Release Artifact for ${{ github.ref_name }}"
     runs-on: ubuntu-latest
     steps: 
@@ -100,7 +100,7 @@ jobs:
         run: ls -R release-${{ github.ref_name }}
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.event.ref, 'refs/tags/v')
+        # if: startsWith(github.event.ref, 'refs/tags/v')
         with:
           name: ${{ github.ref_name }}
           files: |
