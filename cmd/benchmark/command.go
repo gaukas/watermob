@@ -21,7 +21,7 @@ func NewBenchmark() *Benchmark {
 	b.messageSz = b.fs.Int("sz", 1024, "size of the message to send/expect")
 	b.totalMsg = b.fs.Int("m", 1000, "total number of messages to send/expect")
 	b.interval = b.fs.Duration("i", 1*time.Millisecond, "minimal interval between each message, only for echo")
-
+	b.waterConf = b.fs.String("c", "", "path to the WATER config file")
 	return b
 }
 
@@ -40,7 +40,8 @@ type Benchmark struct {
 	messageSz *int
 	totalMsg  *int
 
-	wasm []byte
+	wasm      []byte
+	waterConf *string
 
 	interval *time.Duration
 
@@ -92,6 +93,14 @@ func (b *Benchmark) Init(args []string) error {
 	}
 
 	b.bd = watermob.NewBenchmarkDialer().SetMessageSize(*b.messageSz).SetTotalMessage(*b.totalMsg).SetInterval(*b.interval)
+
+	if *b.waterConf != "" {
+		watmConf, err := os.ReadFile(*b.waterConf)
+		if err != nil {
+			return fmt.Errorf("failed to read watm config file at %s (specified by --c): %v ", *b.waterConf, err)
+		}
+		b.bd.SetConfigJSON(watmConf)
+	}
 
 	if *b.interpreter {
 		b.bd.ForceInterpreter()

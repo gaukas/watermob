@@ -1,7 +1,7 @@
 github.com/blang/vfs v1.0.0 h1:AUZUgulCDzbaNjTRWEP45X7m/J10brAptZpSRKRZBZc=
 github.com/blang/vfs v1.0.0/go.mod h1:jjuNUc/IKcRNNWC9NUCvz4fR9PZLPIKxEygtPs/4tSI=
-github.com/gaukas/benchmarkconn v0.0.1 h1:EXxsxvJYx9iHp6ykGjow/BFbZAUOCJ1Nafp8Gu3LZWQ=
-github.com/gaukas/benchmarkconn v0.0.1/go.mod h1:ooIaOXHOkhoVXng3WcnTRHXH9whiU8sY20lj4OODdeM=
+github.com/gaukas/benchmarkconn v0.0.2 h1:+39zxzQdZXP5d8Kd3SIQwxUiThf0E3aSIeB7/PgofZU=
+github.com/gaukas/benchmarkconn v0.0.2/go.mod h1:ooIaOXHOkhoVXng3WcnTRHXH9whiU8sY20lj4OODdeM=
 github.com/gaukas/wazerofs v0.1.0 h1:wIkW1bAxSnpaaVkQ5LOb1tm1BXdVap3eKjJpVWIqt2E=
 github.com/gaukas/wazerofs v0.1.0/go.mod h1:+JECB9Fwt0taPqSgHckG9lmT3tcoVK+9VJozTsq9UlI=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=

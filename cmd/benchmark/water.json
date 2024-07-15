@@ -1,0 +1,12 @@
+{
+    "transport_module": {
+        "config": "watm.json"
+    },
+    "module": {
+        "inherit_stdout": true,
+        "inherit_stderr": true,
+        "preopened_dirs": {
+            "/etc/ssl/certs/": "/etc/ssl/certs/"
+        }
+    }
+}

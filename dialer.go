@@ -27,7 +27,10 @@ type Dialer struct {
 	configJSON []byte
 	configPB   []byte
 
+	watmCfg []byte
+
 	forceInterpreter bool
+	iosForceCompiler bool
 }
 
 func NewDialer() *Dialer {
@@ -78,6 +81,10 @@ func (d *Dialer) SetConfigPB(configPB []byte) {
 	d.configJSON = nil
 }
 
+func (d *Dialer) SetWATMConfig(watmCfg []byte) {
+	d.watmCfg = watmCfg
+}
+
 func (d *Dialer) DialWATER(network, remoteAddr string, wasm []byte) (NetConn, error) {
 	config := &water.Config{
 		TransportModuleBin: wasm,
@@ -88,13 +95,21 @@ func (d *Dialer) DialWATER(network, remoteAddr string, wasm []byte) (NetConn, er
 		return nil, errors.New("water: WebAssembly Transport Module binary is not provided in config")
 	}
 
-	if d.configJSON != nil {
-		config.UnmarshalJSON(d.configJSON)
-	} else if d.configPB != nil {
-		config.UnmarshalProto(d.configPB)
+	if len(d.watmCfg) > 0 {
+		config.TransportModuleConfig = water.TransportModuleConfigFromBytes(d.watmCfg)
 	}
 
-	if runtime.GOOS == "ios" || d.forceInterpreter {
+	if d.configJSON != nil {
+		if err := config.UnmarshalJSON(d.configJSON); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	} else if d.configPB != nil {
+		if err := config.UnmarshalProto(d.configPB); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
+
+	if (runtime.GOOS == "ios" && !d.iosForceCompiler) || d.forceInterpreter {
 		// Force-enable interpreter mode on iOS until we have a better workaround.
 		config.RuntimeConfig().Interpreter()
 	}
@@ -122,6 +137,14 @@ func (d *Dialer) ForceInterpreter() {
 	d.forceInterpreter = true
 }
 
+func (d *Dialer) ForceCompilerOnIOS() {
+	d.iosForceCompiler = true
+}
+
 func (d *Dialer) DoNotForceInterpreter() {
 	d.forceInterpreter = false
+}
+
+func (d *Dialer) DoNotForceCompilerOnIOS() {
+	d.iosForceCompiler = false
 }
